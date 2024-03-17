@@ -1,0 +1,51 @@
+
+******************************************
+               Running on cuda:0 
+******************************************
+Regulariser          :      2-norm , 0.0001
+Dataset              :                MNIST
+Downloading http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz
+Downloading http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz to ./MNIST/raw/train-images-idx3-ubyte.gz
+Extracting ./MNIST/raw/train-images-idx3-ubyte.gz to ./MNIST/raw
+
+Downloading http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz
+Downloading http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz to ./MNIST/raw/train-labels-idx1-ubyte.gz
+Extracting ./MNIST/raw/train-labels-idx1-ubyte.gz to ./MNIST/raw
+
+Downloading http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz
+Downloading http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz to ./MNIST/raw/t10k-images-idx3-ubyte.gz
+Extracting ./MNIST/raw/t10k-images-idx3-ubyte.gz to ./MNIST/raw
+
+Downloading http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz
+Downloading http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz to ./MNIST/raw/t10k-labels-idx1-ubyte.gz
+Extracting ./MNIST/raw/t10k-labels-idx1-ubyte.gz to ./MNIST/raw
+
+Data size            :         (70000, 784)
+Dataset              :                MNIST
+No. Samples          :                70000
+Dimensions           :                 7840
+x0                   :                zeros
+Algorithm            :     FaithfulNewtonCR
+..............................................................................................................................
+     ite     |    inite    |    dtype    |    orcs     |    time     |      f      |   g_norm    |    alpha    |     acc     
+..............................................................................................................................
+      0      |      0      |    None     |      0      |    0.00     | 2.3979e+00  | 1.7155e+01  |  0.00e+00   |    0.00     
+      1      |      2      |     GRD     |      9      |    0.01     | 1.8055e+00  | 1.8414e+01  |  1.00e+00   |    0.00     
+      2      |      3      |     TER     |     21      |    0.02     | 1.0358e+00  | 7.6164e+00  |  1.00e+00   |    0.00     
+      3      |      9      |     TER     |     51      |    0.05     | 5.4651e-01  | 2.2271e+00  |  1.00e+00   |    0.00     
+      4      |    5000     |     MAX     |    15054    |    18.07    | 3.4487e-01  | 8.1602e-01  |  1.00e+00   |    0.00     
+      5      |     334     |     TER     |    16059    |    19.01    | 2.6852e-01  | 3.6484e-01  |  1.00e+00   |    0.00     
+      6      |     168     |     TER     |    16566    |    19.49    | 2.3538e-01  | 1.6105e-01  |  1.00e+00   |    0.00     
+      7      |     69      |     TER     |    16776    |    19.68    | 2.2344e-01  | 6.5320e-02  |  1.00e+00   |    0.00     
+      8      |     206     |     TER     |    17397    |    20.26    | 2.1708e-01  | 4.4422e-02  |  1.00e+00   |    0.00     
+      9      |     299     |     TER     |    18297    |    21.11    | 2.1458e-01  | 2.3050e-02  |  1.00e+00   |    0.00     
+     10      |     62      |     TER     |    18486    |    21.28    | 2.1435e-01  | 2.7979e-03  |  1.00e+00   |    0.00     
+     11      |     267     |     TER     |    19290    |    22.03    | 2.1373e-01  | 1.0656e-02  |  1.00e+00   |    0.00     
+     12      |     450     |     TER     |    20643    |    23.31    | 2.1313e-01  | 7.0370e-03  |  1.00e+00   |    0.00     
+     13      |     611     |     TER     |    22479    |    25.06    | 2.1281e-01  | 3.7246e-03  |  1.00e+00   |    0.00     
+     14      |     812     |     TER     |    24918    |    27.40    | 2.1262e-01  | 1.8410e-03  |  1.00e+00   |    0.00     
+     15      |     886     |     TER     |    27579    |    29.97    | 2.1257e-01  | 4.8678e-04  |  1.00e+00   |    0.00     
+     16      |     941     |     TER     |    30405    |    32.70    | 2.1256e-01  | 1.1101e-04  |  1.00e+00   |    0.00     
+     17      |    1016     |     TER     |    33456    |    35.66    | 2.1256e-01  | 1.5806e-05  |  1.00e+00   |    0.00     
+     18      |     980     |     TER     |    36399    |    38.51    | 2.1256e-01  | 3.6014e-06  |  1.00e+00   |    0.00     
+     19      |     869     |     TER     |    39009    |    41.02    | 2.1256e-01  | 4.5700e-07  |  1.00e+00   |    0.00     
