@@ -6,8 +6,8 @@ Created on Tue Jan 30 19:02:16 2024
 """
 
 import torch
-from optimizer import Optimizer
-from linesearchers.strongWolfe import lineSearchWolfeStrong
+from .optimizer import Optimizer
+from .linesearchers.strongWolfe import lineSearchWolfeStrong
 
 L_BFGS_STATS = {"ite":"g", "orcs":"g", "time":".2f", "f":".4e", "g_norm":".4e", "iteLS":"g", 
                 "alpha":".2e", "acc":".2f"}
@@ -43,7 +43,7 @@ class L_BFGS(Optimizer):
             pk = self._twoloop(-self.gk).detach()
         
         self.alpha, self.lineite, self.lineorcs = lineSearchWolfeStrong(lambda x : self.fun(x, "01"), self.xk, pk, 
-                                                         self.fk, self.gk, self.alpha0, 1e5, 1e-4, 0.9, self.lineMaxite)
+                                                         self.fk, self.gk, self.alpha0, 1e5, 1e-4, 0.5, self.lineMaxite)
         xkp1 = self.xk + self.alpha * pk
         self.fk, gkp1 = self.fun(xkp1, "01")
 

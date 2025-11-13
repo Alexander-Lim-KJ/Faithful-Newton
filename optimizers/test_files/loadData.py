@@ -15,7 +15,7 @@ def unpickle_csv(file):
     return data
 
 def loadData():
-    raw_data = unpickle_csv("./test_files/spam/spambase.data")
+    raw_data = unpickle_csv(os.path.dirname(os.path.realpath(__file__)) + "/spam/spambase.data")
     train_raw = raw_data[:, 0:-1]
     labels_raw = raw_data[:, -1].reshape(-1)
     return torch.tensor(train_raw, dtype = torch.float64), torch.tensor(labels_raw), None, None

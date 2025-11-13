@@ -26,7 +26,7 @@ class NewtonCR(Optimizer):
         super().__init__(fun, x0, alpha0, gradtol, maxite, maxorcs)
         
     def step(self):
-        pk, self.inite, rtol = CR(self.hk, -self.gk, self.restol, self.inmaxite, True)
+        pk, self.inite, rtol = CR(self.hk, -self.gk, self.restol, self.inmaxite)
         self.alphak, self.lineite = backwardArmijo(lambda x : self.fun(x, "0"), 
                                                    self.xk, self.fk, self.gk, self.alpha0, pk, 
                                                    self.lineBetaB, self.lineRho, self.lineMaxite)

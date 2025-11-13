@@ -6,7 +6,7 @@ Created on Tue Oct 25 12:54:55 2022
 """
 import torch
 
-def CG(A, b, rtol, maxit, reOrtho):
+def CG(A, b, rtol, maxit, reOrtho = True):
     
     x = torch.zeros_like(b)
     p, r = b, b
@@ -14,13 +14,12 @@ def CG(A, b, rtol, maxit, reOrtho):
     normb = torch.norm(r)
     normr = normb
     Ap = Avec(A, p)
-
+    pAp = torch.dot(p, Ap)
     if reOrtho:
         R = r.reshape(-1, 1) / normr
         
     k = 1
-    while normr / normb > rtol and k < maxit:
-        pAp = torch.dot(p, Ap)
+    while normr / normb > rtol and k < maxit and pAp > 1e-16:
         alpha = (normr ** 2) / pAp
         x = x + alpha * p
         r = r - alpha * Ap
@@ -36,6 +35,7 @@ def CG(A, b, rtol, maxit, reOrtho):
         p = r + beta * p
         Ap = Avec(A, p)
         normr = normrkp1
+        pAp = torch.dot(p, Ap)
         k += 1
         
     return x, k, normr / normb

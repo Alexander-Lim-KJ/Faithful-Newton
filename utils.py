@@ -42,7 +42,7 @@ def initx0(x0_type, size):
     
     if x0_type == "ones":
         print(TEXT.format("x0", x0_type))
-        return torch.ones(size, dtype = cTYPE, device = cCUDA)
+        return torch.ones(size, dtype = cTYPE, device = cCUDA) * 1
     
     if x0_type == "zeros":
         print(TEXT.format("x0", x0_type))
@@ -54,7 +54,7 @@ def initx0(x0_type, size):
     
     if x0_type == "uniform":
         print(TEXT.format("x0", x0_type))
-        return torch.rand(size, dtype = cTYPE, device = cCUDA)
+        return torch.rand(size, dtype = cTYPE, device = cCUDA) * 0.01
     
 def execute(folder_path, problem_type, lamb, algo, x0, const, verbose, seed):
     

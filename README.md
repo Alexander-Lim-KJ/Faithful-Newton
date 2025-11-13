@@ -1,2 +1,2 @@
-# Faithful-Newton
- Faithful Newton's method
+# NumOpt
+ Codes for Numerical Optimization

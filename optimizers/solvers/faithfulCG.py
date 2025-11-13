@@ -7,9 +7,8 @@ Created on Thu Feb 22 10:22:15 2024
 
 import torch
 
-def faithfulCG(A, b, term, maxit, skip_check = 1, reOrtho = True):
+def faithfulCG(A, b, term, maxit, skip = 1, reOrtho = True):
     k = 1
-    x = torch.zeros_like(b)
     p, r = b, b
         
     normb = torch.norm(r)
@@ -21,13 +20,18 @@ def faithfulCG(A, b, term, maxit, skip_check = 1, reOrtho = True):
         
     pAp = torch.dot(p, Ap)
     alpha = (normr ** 2) / pAp
-    x = x + alpha * p
+    x = alpha * p
        
     d = 1 # number of times term is called
-    if not term(x, 1):
-        return x / 2, d, k, "GRD"
     
-    stored_dir = [(x, 1)]
+    xHx = torch.dot(x, alpha * Ap)
+    if not term(x, None):
+        if alpha < 1:
+            return x / 2, d, k, "GRD"
+        return b, d, k, "GRD"
+    
+    stored_dir = [(x, None)]
+    #skip = 1
     while True:
         r = r - alpha * Ap
         if reOrtho:
@@ -46,17 +50,19 @@ def faithfulCG(A, b, term, maxit, skip_check = 1, reOrtho = True):
         pAp = torch.dot(p, Ap)
         alpha = (normr ** 2) / pAp
         x = x + alpha * p
-        
+
+        #xHx = torch.dot(x, b - (r - alpha * Ap))
         # only check for termination condition every skip_check times
-        if not len(stored_dir) % skip_check and not term(x, (normb / normr) ** 2):
+        if not len(stored_dir) % skip and not term(x, None):
             return *binary_search(stored_dir, term, d), k, "TER"
         
         # clear stored update directions
-        if not len(stored_dir) % skip_check:
+        if not len(stored_dir) % skip:
             d += 1
-            stored_dir = [(x, (normb / normr) ** 2)]
+            stored_dir = [(x, None)]
+            #skip = min(skip * 2, max_skip)
         else:
-            stored_dir.append((x, (normb / normr) ** 2))
+            stored_dir.append((x, None))
         
         if k >= maxit:
             return *binary_search(stored_dir, term, d), k, "MAX"

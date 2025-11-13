@@ -41,10 +41,12 @@ class FaithfulNewtonCG(Optimizer):
             self.alphak = 1
             
         self.fk, self.gk, self.hk = self.fun(self.xk, "012")
+        self.prev_f = self.fk
         
     def recordStats(self, acc):
         if self.k == 0:
             self.fk, self.gk, self.hk = self.fun(self.xk, "012")
+            self.prev_f = self.fk
             self.inite = 0
             self.gknorm = torch.linalg.norm(self.gk, torch.inf)
             self.recording((0, 0, 0, 0, float(self.fk), 
@@ -55,8 +57,13 @@ class FaithfulNewtonCG(Optimizer):
                                self.toc, float(self.fk), float(self.gknorm), 
                                self.alphak, float(acc)))
             
-    def termInner(self, x, inv_relres):
-        return self.fun(self.xk + x, "0") < self.fk + self.beta * inv_relres * torch.dot(self.gk, x)
+    def termInner(self, x, xHx):
+        #nxt_f = self.fun(self.xk + x, "0")
+        #if nxt_f < self.prev_f + self.beta * (torch.dot(self.gk, x) + xHx / 2):
+        #    self.prev_f = nxt_f
+        #    return True
+        #return False
+        return self.fun(self.xk + x, "0") < self.fk + self.beta * (torch.dot(self.gk, x))# + xHx / 2)
         
     def oracleCalls(self):
         self.orcs += 2 + 2 * self.inite + self.checks + self.lineite

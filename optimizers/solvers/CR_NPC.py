@@ -26,8 +26,9 @@ def CR_NPC(A, b, rtol, maxit, reOrtho = True):
     k = 1
     
     # NPC detection
-    if rAr <= 1e-15:
-        return r, k, "NPC"
+    if rAr <= 0:
+        #return r, k, "NPC"
+        return Ap * rAr / torch.dot(Ap, Ap), k, "NPC"
     
     while normAr > rtol * normAx and k < maxit:
         alpha = rAr / torch.dot(Ap, Ap)
@@ -56,8 +57,9 @@ def CR_NPC(A, b, rtol, maxit, reOrtho = True):
         normAx = torch.norm(b - r)
         k += 1
         
-        if rAr <= 1e-15:
-            return r, k, "NPC"
+        if rAr <= 0:
+            #return r, k, "NPC"
+            return Ap * rAr / torch.dot(Ap, Ap), k, "NPC"
             
     if k == maxit:
         return x, k, "MAX"

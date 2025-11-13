@@ -6,12 +6,13 @@ Created on Mon Feb 26 10:44:53 2024
 """
 import torch
 
-def CGSteihaug(H, g, delta, tol, maxite):
+def CGSteihaug(H, g, delta, rtol, maxite):
     
     z = torch.zeros_like(g)
     # if torch.norm(g) < tol:
     #     return z, "||g||<tol", 1, 0
     
+    norm_g = torch.norm(g)
     j = 0
     d, r = -g.clone(), g.clone()
     while j <= maxite:
@@ -41,7 +42,7 @@ def CGSteihaug(H, g, delta, tol, maxite):
 
         z = zp1
         r = r + alpha * Bd
-        if torch.norm(r) < tol:
+        if torch.norm(r) / norm_g < rtol:
             p = z
             m0_mk = - torch.dot(g, p) - torch.dot(p, Avec(H, p)) / 2
             return p, "SOL,<", m0_mk, j

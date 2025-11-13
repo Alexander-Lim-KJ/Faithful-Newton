@@ -14,15 +14,16 @@ def CR(A, b, rtol, maxit, reOrtho = True):
     normr = torch.norm(r)
     normb = normr
     
+    normAp = torch.norm(Ap)
+    normAb, normAr = normAp, normAp
     if reOrtho:
-        normAp = torch.norm(Ap)
         AP = Ap.reshape(-1, 1) / normAp
         
     Ar = Ap.clone()
     rAr = torch.dot(r, Ar)
     k = 1
         
-    while normr / normb > rtol and k < maxit:
+    while normr / normb > rtol and k < maxit and rAr > 1e-14:# and normAr / normAb > rtol:
         alpha = rAr / torch.dot(Ap, Ap)
         x = x + alpha * p
         rp1 = r - alpha * Ap
@@ -35,9 +36,10 @@ def CR(A, b, rtol, maxit, reOrtho = True):
         beta = rp1Arp1 / rAr
         p = rp1 + beta * p
         Ap = Arp1 + beta * Ap
-    
+        
+        normAr = torch.norm(Arp1)
+        normAp = torch.norm(Ap)
         if reOrtho:
-            normAp = torch.norm(Ap)
             AP = torch.concat([AP, Ap.reshape(-1, 1) / normAp], dim = 1)
                 
         # update

@@ -15,17 +15,18 @@ NEWTON_STATS = {"ite":"g", "inite":"g", "orcs":"g", "time":".2f",
 class NewtonCG(Optimizer):
     
     def __init__(self, fun, x0, alpha0, gradtol, maxite, maxorcs, restol, inmaxite, 
-                 lineMaxite, lineBetaB, lineRho):
+                 lineMaxite, lineBetaB, lineRho, reOrtho):
         self.info = NEWTON_STATS
         self.restol = restol
         self.inmaxite = inmaxite
         self.lineMaxite = lineMaxite
         self.lineBetaB = lineBetaB
         self.lineRho = lineRho
+        self.reOrtho = reOrtho
         super().__init__(fun, x0, alpha0, gradtol, maxite, maxorcs)
         
     def step(self):
-        pk, self.inite, rtol = CG(self.hk, -self.gk, self.restol, self.inmaxite, True)
+        pk, self.inite, rtol = CG(self.hk, -self.gk, self.restol, self.inmaxite, reOrtho = self.reOrtho)
         self.alphak, self.lineite = backwardArmijo(lambda x : self.fun(x, "0"), 
                                                    self.xk, self.fk, self.gk, self.alpha0, pk, 
                                                    self.lineBetaB, self.lineRho, self.lineMaxite)
