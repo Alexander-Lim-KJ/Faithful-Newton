@@ -40,62 +40,62 @@ class AccCRNAdapt(Optimizer):
             sk_norm_sq = torch.sqrt(torch.norm(self.sk))
             self.vk = self.x0 - self.sk / sk_norm_sq
             
-            if first_cycle:
-                if self.fs is None:
-                    self.fs, self.gs, self.gdotxs = self.fk.reshape(1), self.gk.reshape(-1,1), torch.dot(self.gk, self.xk).reshape(1)
-                    self.tas = ta.reshape(1)
-                else:
-                    self.fs, self.gs = torch.cat((self.fs, self.fk.reshape(1))), torch.cat((self.gs, self.gk.reshape(-1,1)), dim = -1)
-                    self.gdotxs = torch.cat((self.gdotxs, torch.dot(self.gk, self.xk).reshape(1)))
-                    self.tas = torch.cat((self.tas, ta.reshape(1)))
-            else:
-                self.fs[-1], self.gs[:,-1], self.gdotxs[-1] = self.fk, self.gk, torch.dot(self.gk, self.xk)
-                self.tas[-1] = ta
-                
-            self.vk, self.auxIte, self.auxOpt = self.GDSolvesAuxF()
-            first_cycle = False
-            if self.auxF(self.vk, self.x0, self.gs, self.tas, self.fs, self.gdotxs, order = "0") > Akp1 * self.fk:
-                self.A = Akp1
-                self.nu = min(self.nu * self.theta, self.nuMax)
-                self.cubicOracles += 2 * (i + 1) 
-                break
+#            if first_cycle:
+#                if self.fs is None:
+#                    self.fs, self.gs, self.gdotxs = self.fk.reshape(1), self.gk.reshape(-1,1), torch.dot(self.gk, self.xk).reshape(1)
+#                    self.tas = ta.reshape(1)
+#                else:
+#                    self.fs, self.gs = torch.cat((self.fs, self.fk.reshape(1))), torch.cat((self.gs, self.gk.reshape(-1,1)), dim = -1)
+#                    self.gdotxs = torch.cat((self.gdotxs, torch.dot(self.gk, self.xk).reshape(1)))
+#                    self.tas = torch.cat((self.tas, ta.reshape(1)))
+#            else:
+#                self.fs[-1], self.gs[:,-1], self.gdotxs[-1] = self.fk, self.gk, torch.dot(self.gk, self.xk)
+#                self.tas[-1] = ta
+#                
+#            self.vk, self.auxIte, self.auxOpt = self.GDSolvesAuxF()
+#            first_cycle = False
+#            if self.auxF(self.vk, self.x0, self.gs, self.tas, self.fs, self.gdotxs, order = "0") > Akp1 * self.fk:
+#                self.A = Akp1
+#                self.nu = min(self.nu * self.theta, self.nuMax)
+#                self.cubicOracles += 2 * (i + 1) 
+#                break
         self.nu = min(self.nu * self.theta ** 2, self.nuMax)
         
-    def GDSolvesAuxF(self, eps = 1e-3, TMax = 10000):
-        # initialization 
-        vk = self.vk
-        
-        cfk, cgk = self.auxF(vk, self.x0, self.gs, self.tas, self.fs, self.gdotxs, order = "01") # 2 oracle calls
-        eta = self.alpha0
-        if torch.norm(cgk, torch.inf) < eps:
-            return vk, 1, torch.norm(cgk, torch.inf)
-        for i in range(TMax):
-            # 2 * ite number of oracle calls
-            eta, ite = backwardArmijo(lambda x : self.auxF(x, self.x0, self.gs, self.tas, self.fs, self.gdotxs, order = "0"), 
-                                      vk, cfk, cgk, eta, -cgk, 1e-4, 0.5, 100)
-            vk = vk - eta * cgk
-            eta *= 2
-            cfk, cgk = self.auxF(vk, self.x0, self.gs, self.tas, self.fs, self.gdotxs, order = "01") 
-            if torch.norm(cgk, torch.inf) < eps:
-                return vk, i + 1, torch.norm(cgk, torch.inf)
-        return vk, i + 1, torch.norm(cgk, torch.inf)
-    
-    def auxF(self, x, x0, grads, tas, fs, graddotxs, order = "01"):
-        normxmx0 = torch.norm(x - x0)
-        first_term = (normxmx0 ** 3) / 3
-        
-        #if tas is None:
-        #    gdotx = torch.einsum("ij,i->j", grads, x)
-        #    if order == "0":
-        #        return first_term + tas * (fs + gdotx - graddotxs)
-        #    return first_term + tas * (fs + gdotx - graddotxs), tas * grads.flatten() + normxmx0 * (x - x0)
-        
-        gdotx = torch.einsum("ij,i->j", grads, x)
-        af = first_term + torch.dot(tas, (fs + gdotx - graddotxs))
-        if order == "0":
-            return af
-        gf = torch.einsum("ij->i", tas * grads).flatten() + normxmx0 * (x - x0)
-        return af, gf
+#    def GDSolvesAuxF(self, eps = 1e-3, TMax = 10000):
+#        # initialization 
+#        vk = self.vk
+#        
+#        cfk, cgk = self.auxF(vk, self.x0, self.gs, self.tas, self.fs, self.gdotxs, order = "01") # 2 oracle calls
+#        eta = self.alpha0
+#        if torch.norm(cgk, torch.inf) < eps:
+#            return vk, 1, torch.norm(cgk, torch.inf)
+#        for i in range(TMax):
+#            # 2 * ite number of oracle calls
+#            eta, ite = backwardArmijo(lambda x : self.auxF(x, self.x0, self.gs, self.tas, self.fs, self.gdotxs, order = "0"), 
+#                                      vk, cfk, cgk, eta, -cgk, 1e-4, 0.5, 100)
+#            vk = vk - eta * cgk
+#            eta *= 2
+#            cfk, cgk = self.auxF(vk, self.x0, self.gs, self.tas, self.fs, self.gdotxs, order = "01") 
+#            if torch.norm(cgk, torch.inf) < eps:
+#                return vk, i + 1, torch.norm(cgk, torch.inf)
+#        return vk, i + 1, torch.norm(cgk, torch.inf)
+#    
+#    def auxF(self, x, x0, grads, tas, fs, graddotxs, order = "01"):
+#        normxmx0 = torch.norm(x - x0)
+#        first_term = (normxmx0 ** 3) / 3
+#        
+#        #if tas is None:
+#        #    gdotx = torch.einsum("ij,i->j", grads, x)
+#        #    if order == "0":
+#        #        return first_term + tas * (fs + gdotx - graddotxs)
+#        #    return first_term + tas * (fs + gdotx - graddotxs), tas * grads.flatten() + normxmx0 * (x - x0)
+#        
+#        gdotx = torch.einsum("ij,i->j", grads, x)
+#        af = first_term + torch.dot(tas, (fs + gdotx - graddotxs))
+#        if order == "0":
+#            return af
+#        gf = torch.einsum("ij->i", tas * grads).flatten() + normxmx0 * (x - x0)
+#        return af, gf
     
     def GDSolvesCubic(self, h0, M, eps = 1e-3, TMax = 10000):
         # initialization
