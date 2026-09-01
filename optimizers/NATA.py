@@ -3,14 +3,15 @@ from hyperparameters import cCUDA, cTYPE
 from .optimizer import Optimizer
 from .linesearchers.armijo import backwardArmijo
 
-STATS = {"ite":"g", "orcs":"g", "time":".2f", "auxSolve":"g", "auxOpt":".2e", "cubicSolve":"g", "cubicOpt":".2e", "f":".4e", "g_norm":".4e", "acc":".2f"}
-                   
+STATS = {"ite":"g", "orcs":"g", "time":".2f", "cubicSolve":"g", "cubicOpt":".2e", "f":".4e", "g_norm":".4e", "acc":".2f"}
+EPS = 1e-3                   
 class AccCRNAdapt(Optimizer):
 
     def __init__(self, fun, x0, gradtol, maxite, maxorcs, alpha0, M0, nu0, nuMin, nuMax, theta):
         self.info = STATS
         self.M = M0
         self.x0, self.xk, self.vk = x0, x0, x0
+        self.sk = torch.zeros_like(x0, dtype = cTYPE, device = cCUDA)
         self.A, self.nuMin, self.nuMax, self.nu, self.theta = 0, nuMin, nuMax, nu0, theta
         self.tas, self.fs, self.gs, self.gdotxs = None, None, None, None
         super().__init__(fun, x0, alpha0, gradtol, maxite, maxorcs)
@@ -31,9 +32,13 @@ class AccCRNAdapt(Optimizer):
             ta = torch.tensor(ta, dtype = cTYPE, device = cCUDA)
             Akp1 = self.A + ta
             self.yk = self.A * self.xk / Akp1 + ta * self.vk / Akp1
-            self.xk, self.cubicIte, self.cubicOpt, total_cubic_oracle = self.GDSolvesCubic(self.yk, self.M)
+            self.xk, self.cubicIte, self.cubicOpt, total_cubic_oracle = self.GDSolvesCubic(self.yk, self.M, eps = EPS)
             self.cubicOracles += total_cubic_oracle
             self.fk, self.gk = self.fun(self.xk, "01")
+            
+            self.sk += ta * self.gk
+            sk_norm_sq = torch.sqrt(torch.norm(self.sk))
+            self.vk = self.x0 - self.sk / sk_norm_sq
             
             if first_cycle:
                 if self.fs is None:
@@ -56,7 +61,7 @@ class AccCRNAdapt(Optimizer):
                 break
         self.nu = min(self.nu * self.theta ** 2, self.nuMax)
         
-    def GDSolvesAuxF(self, eps = 1e-9, TMax = 10000):
+    def GDSolvesAuxF(self, eps = 1e-3, TMax = 10000):
         # initialization 
         vk = self.vk
         
@@ -92,7 +97,7 @@ class AccCRNAdapt(Optimizer):
         gf = torch.einsum("ij->i", tas * grads).flatten() + normxmx0 * (x - x0)
         return af, gf
     
-    def GDSolvesCubic(self, h0, M, eps = 1e-9, TMax = 10000):
+    def GDSolvesCubic(self, h0, M, eps = 1e-3, TMax = 10000):
         # initialization
         fyk, gyk, hyk = self.fun(h0, "012")
         gknorm2 = torch.norm(gyk) ** 2
@@ -142,8 +147,6 @@ class AccCRNAdapt(Optimizer):
     def oracleCalls(self):
         self.orcs += self.cubicOracles
         
-
-
 def Av(A, v):
     if callable(A):
         return A(v)
