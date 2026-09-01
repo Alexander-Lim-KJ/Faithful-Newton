@@ -47,7 +47,7 @@ class AccCubicRegNewton(Optimizer):
             self.xk, self.cubicIte, self.cubicOpt, self.total_cubic_oracle = self.GDSolvesCubic(self.yk, 2 * self.M, eps = EPS)
             
             self.fk, self.gk = self.fun(self.xk, "01")
-            self.sk += (self.k + 1) * (self.k + 2) self.gk / 2
+            self.sk += (self.k + 1) * (self.k + 2) * self.gk / 2
             #self.fs = torch.cat((self.fs, self.fk.reshape(1)))
             #self.gs = torch.cat((self.gs, self.gk.reshape(-1,1)), dim = 1)
             #self.gdotxs = torch.cat((self.gdotxs, torch.dot(self.xk, self.gk).reshape(1)))
@@ -126,10 +126,10 @@ class AccCubicRegNewton(Optimizer):
             self.fk, self.gk = self.fun(self.xk, "01")
             self.inite = 0
             self.gknorm = torch.linalg.norm(self.gk, torch.inf)
-            self.recording((0, 0, 0, 0, float(0), 0, float(0), float(self.fk), float(self.gknorm), acc))
+            self.recording((0, 0, 0, 0, float(0), float(self.fk), float(self.gknorm), acc))
         else:
             self.gknorm = torch.linalg.norm(self.gk, torch.inf)
-            self.recording((self.k, self.orcs, self.toc, self.auxIte, float(self.auxOpt), self.cubicIte, 
+            self.recording((self.k, self.orcs, self.toc, self.cubicIte, 
                             float(self.cubicOpt), float(self.fk), float(self.gknorm), acc))
     
     def oracleCalls(self):
