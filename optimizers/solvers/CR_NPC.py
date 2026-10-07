@@ -6,18 +6,12 @@ Created on Thu Feb 22 11:19:31 2024
 """
 import torch
 
-def CR_NPC(A, b, rtol, maxit, reOrtho = True):    
+def CR_NPC(A, b, rtol, maxit):    
     x = torch.zeros_like(b)
     p, r = b, b
     Ap = Avec(A, p)
     
-    normr = torch.norm(r)
-    normb = normr
-    
-    if reOrtho:
-        normAp = torch.norm(Ap)
-        AP = Ap.reshape(-1, 1) / normAp
-        
+    normr = torch.norm(r)        
     Ar = Ap.clone()
     rAr = torch.dot(r, Ar)
     
@@ -28,25 +22,18 @@ def CR_NPC(A, b, rtol, maxit, reOrtho = True):
     # NPC detection
     if rAr <= 0:
         #return r, k, "NPC"
-        return Ap * rAr / torch.dot(Ap, Ap), k, "NPC"
+        return r * rAr / (normr ** 3), k, "NPC"
     
     while normAr > rtol * normAx and k < maxit:
         alpha = rAr / torch.dot(Ap, Ap)
         x = x + alpha * p
         rp1 = r - alpha * Ap
-        
-        if reOrtho:
-            rp1 = rp1 - AP @ (AP.T @ rp1) 
             
         Arp1 = Avec(A, rp1)
         rp1Arp1 = torch.dot(rp1, Arp1)
         beta = rp1Arp1 / rAr
         p = rp1 + beta * p
         Ap = Arp1 + beta * Ap
-    
-        if reOrtho:
-            normAp = torch.norm(Ap)
-            AP = torch.concat([AP, Ap.reshape(-1, 1) / normAp], dim = 1)
                 
         # update
         Ar = Arp1
@@ -59,7 +46,7 @@ def CR_NPC(A, b, rtol, maxit, reOrtho = True):
         
         if rAr <= 0:
             #return r, k, "NPC"
-            return Ap * rAr / torch.dot(Ap, Ap), k, "NPC"
+            return r * rAr / (normr ** 3), k, "NPC"
             
     if k == maxit:
         return x, k, "MAX"
