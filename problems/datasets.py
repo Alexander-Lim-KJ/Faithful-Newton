@@ -9,6 +9,7 @@ import torch, numpy, pandas, sklearn
 import sklearn.datasets as skdatasets
 import torchvision.datasets as datasets
 from hyperparameters import cTYPE, cCUDA
+from torchvision.transforms import v2
 
 TEXT = "{:<20} : {:>20}"
 
@@ -49,6 +50,10 @@ def prepareData(dataset, one_hot):
     if dataset == "Covtype":
         print(TEXT.format("Dataset", dataset))
         return Covtype(one_hot, 7)
+        
+    if dataset == "DTD":
+        print(TEXT.format("Dataset", dataset))
+        return DTD(one_hot, 47)
         
 def MNISTs(one_hot, classes):
     """
@@ -170,3 +175,40 @@ def Ethylene(window = 2, stride = 1):
     n = torch.randperm(trainX.shape[0])
     print(TEXT.format("Data size", str(tuple(trainX.shape))))
     return trainX[n], trainY[n], None, None
+
+def DTD(one_hot, classes):
+    trans = v2.Compose([v2.Resize(150), v2.CenterCrop(150), v2.PILToTensor()])
+    train_set = datasets.DTD("./", split = "train", transform = trans, download = True)
+    #test_set = datasets.DTD("./", train = False, transform = v2.Resize(150, 150), download = True)
+    
+    n = len(train_set)
+    X = torch.zeros((n, 150*150*3), dtype=cTYPE)
+    Y = torch.zeros(n, dtype=torch.long)
+    
+    i = 0
+    for img, label in train_set:
+        X[i] = img.reshape(-1) / 255.   # C,H,W -> H,W,C
+        Y[i] = label
+        i += 1
+        
+    del train_set    
+    
+    X = X.to(cCUDA)
+    Y = Y.to(cCUDA)
+    
+    #X = torch.tensor(train_set.data.reshape(train_set.data.shape[0], -1), dtype = cTYPE, device = cCUDA)
+    #X = torch.cat([torch.tensor(train_set.data.reshape(train_set.data.shape[0], -1), 
+    #                            dtype = cTYPE, device = cCUDA),
+    #               torch.tensor(test_set.data.reshape(test_set.data.shape[0], -1), 
+    #                            dtype = cTYPE, device = cCUDA)], dim = 0)
+    #Y = torch.tensor(train_set.targets, device = cCUDA)
+    #Y = torch.cat([torch.tensor(train_set.targets, device = cCUDA), 
+    #               torch.tensor(test_set.targets, device = cCUDA)], dim = 0) % classes
+    
+    #del train_set, test_set
+    
+    if one_hot:
+        Y = torch.nn.functional.one_hot(Y.long(), classes).to(cTYPE)
+    
+    print(TEXT.format("Data size", str(tuple(X.shape))))
+    return X, Y

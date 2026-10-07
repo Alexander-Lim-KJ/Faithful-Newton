@@ -88,9 +88,10 @@ class AccCubicRegNewton(Optimizer):
     def GDSolvesCubic(self, h0, M, eps = 1e-3, TMax = 10000):
         # initialization
         fyk, gyk, hyk = self.fun(h0, "012")
-        gknorm2 = torch.norm(gyk) ** 2
+        gknorm = torch.norm(gyk)
+        gknorm2 = gknorm ** 2
         gHg = torch.dot(gyk, Av(hyk, gyk))
-        gamma = - gHg / (2 * M * gknorm2) + torch.sqrt((gHg / (2 * M * gknorm2)) ** 2 + torch.sqrt(gknorm2) / (2 * M))
+        gamma = - gHg / (M * gknorm2) + torch.sqrt((gHg / (M * gknorm2)) ** 2 + 2 * torch.sqrt(gknorm2) / (M))
         yk = h0 - gyk / torch.norm(gyk) * gamma
         
         cfk, cgk = self.cubic_f(yk, h0, M, fyk, gyk, hyk, order = "01") # 2 oracle calls
@@ -106,9 +107,9 @@ class AccCubicRegNewton(Optimizer):
             yk = yk - eta * cgk
             eta *= 2
             cfk, cgk = self.cubic_f(yk, h0, M, fyk, gyk, hyk, order = "01")
-            if torch.norm(cgk, torch.inf) < eps:
-                return yk, i + 2, torch.norm(cgk, torch.inf), 2 * total_oracle
-        return yk, i + 2, torch.norm(cgk, torch.inf), 2 + 2 * total_oracle
+            if torch.norm(cgk) / gknorm < eps:
+                return yk, i + 2, torch.norm(cgk) / gknorm, 2 * total_oracle
+        return yk, i + 2, torch.norm(cgk) / gknorm, 2 + 2 * total_oracle
             
     def cubic_f(self, y, h0, M, fyk, gyk, hyk, order = "01"):
         ymx = y - h0
