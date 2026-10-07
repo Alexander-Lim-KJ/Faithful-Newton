@@ -3,6 +3,7 @@ from .optimizer import Optimizer
 from .linesearchers.armijo import backwardArmijo
 
 STATS = {"ite":"g", "orcs":"g", "time":".2f", "findM_Ite":"g", "cubicSolve":"g", "cubicOpt":".2e", "f":".4e", "g_norm":".4e", "acc":".2f"}
+EPS = 1e-3
                    
 class CubicRegNewton(Optimizer):
     
@@ -17,22 +18,23 @@ class CubicRegNewton(Optimizer):
         self.M /= 2
     
     def forwardtrackingCubic(self, FTCMax = 1000):
-        xkp1, cfkp1, ite, total_oracle, cubicOpt = self.GDSolvesCubic(self.M)
+        xkp1, cfkp1, ite, total_oracle, cubicOpt = self.GDSolvesCubic(self.M, eps = EPS)
         fkp1 = self.fun(xkp1, "0")
         total_oracle += 1
         for i in range(FTCMax):
             if fkp1 <= cfkp1:
                 return xkp1, i, ite, total_oracle, cubicOpt
             self.M *= 2
-            xkp1, cfkp1, ite, oracles, cubicOpt = self.GDSolvesCubic(self.M)
+            xkp1, cfkp1, ite, oracles, cubicOpt = self.GDSolvesCubic(self.M, eps = EPS)
             fkp1 = self.fun(xkp1, "0")
             total_oracle += oracles + 1
     
-    def GDSolvesCubic(self, M, eps = 1e-9, TMax = 10000):
+    def GDSolvesCubic(self, M, eps = 1e-3, TMax = 10000):
         # initialization 
-        gknorm2 = torch.norm(self.gk) ** 2
+        gknorm = torch.norm(self.gk)
+        gknorm2 = gknorm ** 2
         gHg = torch.dot(self.gk, Av(self.hk, self.gk))
-        gamma = - gHg / (2 * M * gknorm2) + torch.sqrt((gHg / (2 * M * gknorm2)) ** 2 + torch.sqrt(gknorm2) / (2 * M))
+        gamma = - gHg / (M * gknorm2) + torch.sqrt((gHg / (M * gknorm2)) ** 2 + 2 * torch.sqrt(gknorm2) / (M))
         yk = self.xk - self.gk / torch.norm(self.gk) * gamma
         
         cfk, cgk = self.cubic_f(yk, M, order = "01") # 2 oracle calls
@@ -47,9 +49,9 @@ class CubicRegNewton(Optimizer):
             yk = yk - eta * cgk
             eta *= 2
             cfk, cgk = self.cubic_f(yk, M, order = "01")
-            if torch.norm(cgk, torch.inf) < eps:
-                return yk, cfk, i + 2, 2 * total_oracle, torch.norm(cgk, torch.inf)
-        return yk, cfk, i + 2, 2 * total_oracle, torch.norm(cgk, torch.inf)
+            if torch.norm(cgk) / gknorm  < eps:
+                return yk, cfk, i + 2, 2 * total_oracle, torch.norm(cgk) / gknorm
+        return yk, cfk, i + 2, 2 * total_oracle, torch.norm(cgk) / gknorm
             
     def cubic_f(self, y, M, order = "01"):
         ymx = y - self.xk
